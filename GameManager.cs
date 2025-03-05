@@ -7,19 +7,22 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
 
+    [Header("Game Settings")]
     public float speed = 2f;
     public float speedIncreaseRate = 0.1f;
     public float maxSpeed = 10f;
     public float timeToIncreaseSpeed = 5f;
 
+    [Header("UI Elements")]
     public GameObject startButton;
     public GameObject settingsButton;
     public GameObject panelScore;
-    public GameObject panelHP;   // HP UI 추가
-    public GameObject textScore; // 점수 텍스트 추가
-    public GameObject player;    // 플레이어 추가
-    public GameObject[] followers; // 여러 Follower 관리
+    public GameObject panelHP;
+    public GameObject textScore;
+    public GameObject player;
+    public GameObject[] followers;
 
+    [Header("Score Settings")]
     public TextMeshProUGUI scoreText;
     private int score = 0;
     private bool isGameOver = false;
@@ -27,10 +30,17 @@ public class GameManager : MonoBehaviour
     private Coroutine scoreCoroutine;
     private Coroutine speedCoroutine;
 
+    [Header("Debugging")]
+    [SerializeField] private int autoScoreIncrement;
+
     void Awake()
     {
         if (instance == null) instance = this;
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
 
     void Start()
@@ -48,35 +58,13 @@ public class GameManager : MonoBehaviour
         isGameOver = false;
         Time.timeScale = 1f;
         score = 0;
-        speed = 2f; // 속도 초기화
+        speed = 2f;
 
-        if (scoreCoroutine == null)
-        {
-            scoreCoroutine = StartCoroutine(IncreaseScore());
-        }
+        StartCoroutines();
 
-        if (speedCoroutine == null)
-        {
-            speedCoroutine = StartCoroutine(IncreaseSpeedOverTime());
-        }
-
-        // UI 및 오브젝트 활성화
-        startButton?.SetActive(false);
-        settingsButton?.SetActive(false);
-        panelScore?.SetActive(false);
-
-        player?.SetActive(true);
-        panelHP?.SetActive(true);
-        textScore?.SetActive(true);
-
-        // 모든 Follower 활성화
-        if (followers != null)
-        {
-            foreach (GameObject follower in followers)
-            {
-                follower?.SetActive(true);
-            }
-        }
+        SetActiveObjects(false, startButton, settingsButton, panelScore);
+        SetActiveObjects(true, player, panelHP, textScore);
+        ToggleFollowers(true);
     }
 
     public void GameOver()
@@ -86,30 +74,18 @@ public class GameManager : MonoBehaviour
         isGameOver = true;
         isGameStarted = false;
 
+        StopCoroutines();
         SaveScores();
+
         Debug.Log("Game Over!");
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    void ShowStartScreen()
+    private void ShowStartScreen()
     {
-        startButton?.SetActive(true);
-        settingsButton?.SetActive(true);
-        panelScore?.SetActive(true);
-
-        // 게임 시작 전 UI 및 오브젝트 비활성화
-        player?.SetActive(false);
-        panelHP?.SetActive(false);
-        textScore?.SetActive(false);
-
-        // 모든 Follower 비활성화
-        if (followers != null)
-        {
-            foreach (GameObject follower in followers)
-            {
-                follower?.SetActive(false);
-            }
-        }
+        SetActiveObjects(true, startButton, settingsButton, panelScore);
+        SetActiveObjects(false, player, panelHP, textScore);
+        ToggleFollowers(false);
 
         if (panelScore)
         {
@@ -123,12 +99,27 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void StartCoroutines()
+    {
+        if (scoreCoroutine != null) StopCoroutine(scoreCoroutine);
+        if (speedCoroutine != null) StopCoroutine(speedCoroutine);
+
+        scoreCoroutine = StartCoroutine(IncreaseScore());
+        speedCoroutine = StartCoroutine(IncreaseSpeedOverTime());
+    }
+
+    private void StopCoroutines()
+    {
+        if (scoreCoroutine != null) StopCoroutine(scoreCoroutine);
+        if (speedCoroutine != null) StopCoroutine(speedCoroutine);
+    }
+
     IEnumerator IncreaseScore()
     {
         while (!isGameOver)
         {
             yield return new WaitForSeconds(1f);
-            score += 100;
+            score += CalculateScoreIncrement();
             UpdateScoreUI();
         }
     }
@@ -140,19 +131,15 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(timeToIncreaseSpeed);
             if (speed < maxSpeed)
             {
-                speed += speedIncreaseRate;
-                speed = Mathf.Min(speed, maxSpeed);
+                speed = Mathf.Min(speed + speedIncreaseRate, maxSpeed);
                 Debug.Log($"속도 증가: {speed}");
             }
         }
     }
 
-    void UpdateScoreUI()
+    private void UpdateScoreUI()
     {
-        if (scoreText != null)
-        {
-            scoreText.text = score.ToString();
-        }
+        if (scoreText) scoreText.text = score.ToString();
     }
 
     public void IncreaseScore(int amount)
@@ -161,14 +148,36 @@ public class GameManager : MonoBehaviour
         UpdateScoreUI();
     }
 
-    void SaveScores()
+    private void SaveScores()
     {
         PlayerPrefs.SetInt("LastScore", score);
         int highScore = PlayerPrefs.GetInt("HighScore", 0);
-        if (score > highScore)
-        {
-            PlayerPrefs.SetInt("HighScore", score);
-        }
+        if (score > highScore) PlayerPrefs.SetInt("HighScore", score);
         PlayerPrefs.Save();
+    }
+
+    private int CalculateScoreIncrement()
+    {
+        float currentSpeed = speed;
+        int additionalPoints = Mathf.FloorToInt((currentSpeed - 2.0f) / 0.5f) * 50;
+        autoScoreIncrement = 50 + additionalPoints;
+        return autoScoreIncrement;
+    }
+
+    private void SetActiveObjects(bool isActive, params GameObject[] objects)
+    {
+        foreach (GameObject obj in objects)
+        {
+            if (obj) obj.SetActive(isActive);
+        }
+    }
+
+    private void ToggleFollowers(bool isActive)
+    {
+        if (followers == null) return;
+        foreach (GameObject follower in followers)
+        {
+            if (follower) follower.SetActive(isActive);
+        }
     }
 }

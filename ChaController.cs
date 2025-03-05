@@ -11,12 +11,15 @@ public class ChaController : MonoBehaviour
     public int hp = 3;
     private int maxHP = 3;
     private bool isInvincible = false;
-    [SerializeField] private bool isGrounded = true;
+    private bool isGrounded = true;
 
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
     private Animator animator;
     private Color originalColor;
+
+    [Header("Animation Debug")]
+    [SerializeField] private float animSpeed;
 
     [Header("Audio Sources")]
     public AudioSource jumpAudioSource;
@@ -41,6 +44,7 @@ public class ChaController : MonoBehaviour
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
         ResetHP();
+        UpdateAnimationSpeed();
     }
 
     void Update()
@@ -49,6 +53,8 @@ public class ChaController : MonoBehaviour
         {
             Jump();
         }
+
+        UpdateAnimationSpeed();
     }
 
     void Jump()
@@ -153,5 +159,17 @@ public class ChaController : MonoBehaviour
     private void PlayAudio(AudioSource audioSource)
     {
         audioSource?.Play();
+    }
+
+
+    private void UpdateAnimationSpeed()
+    {
+        if (animator == null || GameManager.instance == null) return;
+
+        float baseSpeed = 2.0f; // 기본 애니메이션 속도
+        animSpeed = GameManager.instance.speed / baseSpeed;
+        animSpeed = Mathf.Clamp(animSpeed, 0.5f, 3.0f);
+
+        animator.speed = animSpeed; 
     }
 }
