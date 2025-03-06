@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
     public GameObject textScore;
     public GameObject player;
     public GameObject[] followers;
+    public HPBarManager hpBarManager; // ✅ 인스펙터에서 직접 할당
 
     [Header("Score Settings")]
     public TextMeshProUGUI scoreText;
@@ -63,7 +64,7 @@ public class GameManager : MonoBehaviour
 
         SetActiveObjects(false, startButton, settingsButton, panelScore);
         SetActiveObjects(true, player, textScore);
-        HPBarManager.instance.ShowHPBar(true); // ✅ 체력바 표시
+        hpBarManager?.ShowHPBar(true); // ✅ 체력바 표시
         ToggleFollowers(true);
     }
 
@@ -85,7 +86,7 @@ public class GameManager : MonoBehaviour
     {
         SetActiveObjects(true, startButton, settingsButton, panelScore);
         SetActiveObjects(false, player, textScore);
-        HPBarManager.instance.ShowHPBar(false); // ✅ 체력바 숨김
+        hpBarManager?.ShowHPBar(false); // ✅ 체력바 숨김
         ToggleFollowers(false);
 
         if (panelScore)
