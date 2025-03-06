@@ -43,10 +43,13 @@ public class BackgroundColor : MonoBehaviour
             newBackgroundColor = sunsetColor;
             newTextColor = textDayColor;
         }
-        else
+        else if (speed < 10f)
         {
             newBackgroundColor = nightColor;
             newTextColor = textNightColor;
+        } else {
+            newBackgroundColor = dayColor;
+            newTextColor = textDayColor;
         }
 
         mainCamera.backgroundColor = newBackgroundColor; // 배경색 변경

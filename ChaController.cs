@@ -18,6 +18,9 @@ public class ChaController : MonoBehaviour
     private Animator animator;
     private Color originalColor;
 
+    [Header("HP UI Reference")] 
+    [SerializeField] private HPBarManager hpBarManager; // ✅ 인스펙터에서 직접 할당
+
     [Header("Animation Debug")]
     [SerializeField] private float animSpeed;
 
@@ -26,6 +29,7 @@ public class ChaController : MonoBehaviour
     public AudioSource hitAudioSource;
     public AudioSource scoreAudioSource;
     public AudioSource healAudioSource;
+    public AudioSource maxAudioSource;
 
     void Awake()
     {
@@ -97,11 +101,19 @@ public class ChaController : MonoBehaviour
                 if (!isInvincible) TakeDamage();
                 Destroy(other.gameObject);
                 break;
-            case "HealthItem":
+
+            case "HealthItem": // 기존 HP 회복 아이템
                 Heal(1);
                 PlayAudio(healAudioSource);
                 Destroy(other.gameObject);
                 break;
+
+            case "MaxHealthItem": // ✅ HP 최대치 증가 아이템
+                IncreaseMaxHP(1);
+                PlayAudio(maxAudioSource);
+                Destroy(other.gameObject);
+                break;
+
             case "ScoreItem":
                 GameManager.instance.IncreaseScore(1000);
                 PlayAudio(scoreAudioSource);
@@ -110,11 +122,30 @@ public class ChaController : MonoBehaviour
         }
     }
 
+    // ✅ 최대 HP 증가 & 풀 체력 회복
+    public void IncreaseMaxHP(int amount)
+    {
+        maxHP += amount; // 최대 HP 증가
+        hp = maxHP; // 현재 HP를 최대 HP로 설정
+
+        if (hpBarManager != null)
+        {
+            hpBarManager.UpdateHPUI(hp, maxHP);
+        }
+        else
+        {
+            Debug.LogError("hpBarManager is not assigned in the Inspector!");
+        }
+    }
+
     void TakeDamage()
     {
         hp--;
-        HPUIManager.instance.UpdateHPUI(hp);
-        PlayAudio(hitAudioSource);
+
+        if (hpBarManager != null)
+        {
+            hpBarManager.UpdateHPUI(hp, maxHP);
+        }
 
         if (hp <= 0)
         {
@@ -122,10 +153,6 @@ public class ChaController : MonoBehaviour
         }
         else
         {
-            if (SettingManager.instance?.IsVibrationOn() == true)
-            {
-                Handheld.Vibrate();
-            }
             StartCoroutine(HitEffect());
         }
     }
@@ -133,7 +160,25 @@ public class ChaController : MonoBehaviour
     public void Heal(int amount)
     {
         hp = Mathf.Min(hp + amount, maxHP);
-        HPUIManager.instance.UpdateHPUI(hp);
+
+        if (hpBarManager != null)
+        {
+            hpBarManager.UpdateHPUI(hp, maxHP);
+        }
+    }
+
+    public void ResetHP()
+    {
+        hp = maxHP;
+
+        if (hpBarManager != null)
+        {
+            hpBarManager.UpdateHPUI(hp, maxHP);
+        }
+        else
+        {
+            Debug.LogError("hpBarManager is not assigned in the Inspector!");
+        }
     }
 
     IEnumerator HitEffect()
@@ -150,17 +195,10 @@ public class ChaController : MonoBehaviour
         GameManager.instance.GameOver();
     }
 
-    public void ResetHP()
-    {
-        hp = maxHP;
-        HPUIManager.instance.UpdateHPUI(hp);
-    }
-
     private void PlayAudio(AudioSource audioSource)
     {
         audioSource?.Play();
     }
-
 
     private void UpdateAnimationSpeed()
     {

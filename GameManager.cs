@@ -17,7 +17,6 @@ public class GameManager : MonoBehaviour
     public GameObject startButton;
     public GameObject settingsButton;
     public GameObject panelScore;
-    public GameObject panelHP;
     public GameObject textScore;
     public GameObject player;
     public GameObject[] followers;
@@ -63,7 +62,8 @@ public class GameManager : MonoBehaviour
         StartCoroutines();
 
         SetActiveObjects(false, startButton, settingsButton, panelScore);
-        SetActiveObjects(true, player, panelHP, textScore);
+        SetActiveObjects(true, player, textScore);
+        HPBarManager.instance.ShowHPBar(true); // ✅ 체력바 표시
         ToggleFollowers(true);
     }
 
@@ -84,7 +84,8 @@ public class GameManager : MonoBehaviour
     private void ShowStartScreen()
     {
         SetActiveObjects(true, startButton, settingsButton, panelScore);
-        SetActiveObjects(false, player, panelHP, textScore);
+        SetActiveObjects(false, player, textScore);
+        HPBarManager.instance.ShowHPBar(false); // ✅ 체력바 숨김
         ToggleFollowers(false);
 
         if (panelScore)
