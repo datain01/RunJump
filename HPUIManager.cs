@@ -9,12 +9,6 @@ public class HPUIManager : MonoBehaviour
     public Sprite fullHeart; // 정상 하트 이미지
     public Sprite brokenHeart; // 깨진 하트 이미지
 
-    void Awake()
-    {
-        if (instance == null) instance = this;
-        else Destroy(gameObject);
-    }
-
     // HP UI 업데이트
     public void UpdateHPUI(int hp)
     {

@@ -38,12 +38,12 @@ public class BackgroundColor : MonoBehaviour
             newBackgroundColor = dayColor;
             newTextColor = textDayColor;
         }
-        else if (speed < 7f)
+        else if (speed < 6.5f)
         {
             newBackgroundColor = sunsetColor;
             newTextColor = textDayColor;
         }
-        else if (speed < 9.9f)
+        else if (speed < 8.5f)
         {
             newBackgroundColor = nightColor;
             newTextColor = textNightColor;
